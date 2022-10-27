@@ -39,7 +39,7 @@ runs:
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Install dependencies
       shell: bash
-      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle && gem install eb_deploy
+      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle && gem install eb_deployer
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
