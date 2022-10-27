@@ -54,7 +54,9 @@ runs:
         aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
         cat .env
         git ls-files | zip app.zip -@
-        env -S "$(cat .env)" eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+        env -S "$(cat .env)" >> $GITHUB_ENV
+        source .env
+        env -S "$(cat .env)" bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
