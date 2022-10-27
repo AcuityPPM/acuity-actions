@@ -7,9 +7,6 @@ inputs:
   ROLE_ARN:
     description: role to assume
     required: true
-   SLACK_BOT_TOKEN:
-    description: environment name
-    required: true
   WORKING_DIR:
     description: The dir of the rails app
     required: false
@@ -61,15 +58,3 @@ runs:
       id: check-deploy-failure
       shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
-    - name: Post to a Slack channel
-      id: slack
-      uses: slackapi/slack-github-action@v1.23.0
-      with:
-        # Slack channel id, channel name, or user id to post message.
-        # See also: https://api.slack.com/methods/chat.postMessage#channels
-        # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
-        channel-id: 'CU5MQCK35'
-        # For posting a simple plain text message
-        slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-      env:
-        SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
