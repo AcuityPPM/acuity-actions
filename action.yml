@@ -10,9 +10,6 @@ inputs:
   AWS_SECRET_ACCESS_KEY:
     description: role to assume
     required: true
-  ROLE_ARN:
-    description: role to assume
-    required: true
   WORKING_DIR:
     description: The dir of the rails app
     required: false
@@ -48,7 +45,6 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        role-to-assume: ${{ inputs.ROLE_ARN}}
         aws-region: us-east-1
     - name: Copy files to the production website with the AWS CLI
       shell: bash
