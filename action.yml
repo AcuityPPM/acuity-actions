@@ -55,9 +55,7 @@ runs:
         cat .env
         gem install eb_deployer
         git ls-files | zip app.zip -@
-        env -S "$(cat .env)" >> $GITHUB_ENV
-        source .env
-        env -S "$(cat .env)" bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+        cat .env | xargs bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
