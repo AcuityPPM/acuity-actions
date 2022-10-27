@@ -4,7 +4,10 @@ inputs:
   ENVIRONMENT:
     description: environment name
     required: true
-  SLACK_BOT_TOKEN:
+  ROLE_ARN:
+    description: role to assume
+    required: true
+   SLACK_BOT_TOKEN:
     description: environment name
     required: true
   WORKING_DIR:
