@@ -32,7 +32,6 @@ runs:
     - name: Otherwise, check .ruby-version
       if: ${{ ! inputs.RUBY_VERSION }}
       shell: bash
-      bundler-cache: true
       run: cd ${{ inputs.WORKING_DIR }} && echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1.110.0
