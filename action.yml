@@ -4,6 +4,12 @@ inputs:
   ENVIRONMENT:
     description: environment name
     required: true
+  AWS_ACCESS_KEY_ID:
+    description: role to assume
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: role to assume
+    required: true
   ROLE_ARN:
     description: role to assume
     required: true
