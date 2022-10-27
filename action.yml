@@ -10,7 +10,7 @@ inputs:
   WORKING_DIR:
     description: The dir of the rails app
     required: false
-    default: ./
+    default: .
   AWS_REGION:
     description: the region to deploy to
     required: false
@@ -27,18 +27,16 @@ runs:
       shell: bash
       run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
     - name: Otherwise, check .ruby-version
-      working-directory:  ${{ inputs.WORKING_DIR }}
       if: ${{ ! inputs.RUBY_VERSION }}
       shell: bash
-      run:  echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
+      run: cd ${{ inputs.WORKING_DIR }} && echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1.110.0
       with:
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Install dependencies
-      working-directory:  ${{ inputs.WORKING_DIR }}
       shell: bash
-      run: bundle install --path vendor/bundle
+      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -46,13 +44,11 @@ runs:
         aws-region: us-east-1
     - name: Copy files to the production website with the AWS CLI
       shell: bash
-      working-directory:  ${{ inputs.WORKING_DIR }}
       run: |
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} .env
+        cd ${{ inputs.WORKING_DIR }} && aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} .env
     - name: Deploy
-      working-directory:  ${{ inputs.WORKING_DIR }}
       shell: bash
-      run: git ls-files | zip app.zip -@ && env -S "$(cat .env)" eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+      run: cd ${{ inputs.WORKING_DIR }} && git ls-files | zip app.zip -@ && env -S "$(cat .env)" eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
