@@ -51,11 +51,13 @@ runs:
       shell: bash
       run: |
         cd ${{ inputs.WORKING_DIR }}
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
-        cat .env
         gem install eb_deployer
+        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source conf-file
+        set +o allexport
         git ls-files | zip app.zip -@
-        cat .env | xargs bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+        bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
