@@ -35,8 +35,8 @@ runs:
       run: cd ${{ inputs.WORKING_DIR }} && echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1.110.0
-      bundler-cache: true
       with:
+        bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Install dependencies
       shell: bash
