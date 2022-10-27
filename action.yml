@@ -46,13 +46,13 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-    - name: Copy files to the production website with the AWS CLI
-      shell: bash
-      run: |
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ${{ inputs.WORKING_DIR }}/.env
     - name: Deploy
       shell: bash
-      run: cd ${{ inputs.WORKING_DIR }} && git ls-files | zip app.zip -@ && env -S "$(cat .env)" eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+      run: |
+        cd ${{ inputs.WORKING_DIR }}
+        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        git ls-files | zip app.zip -@
+        env -S "$(cat .env)" eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
