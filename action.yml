@@ -54,7 +54,7 @@ runs:
         gem install eb_deployer
         aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
-        source conf-file
+        source .env
         set +o allexport
         git ls-files | zip app.zip -@
         bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
