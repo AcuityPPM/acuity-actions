@@ -40,6 +40,8 @@ runs:
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         role-to-assume: ${{ inputs.ROLE_ARN}}
         aws-region: us-east-1
     - name: Copy files to the production website with the AWS CLI
