@@ -40,7 +40,7 @@ runs:
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Install dependencies
       shell: bash
-      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle && gem install eb_deployer
+      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -53,6 +53,7 @@ runs:
         cd ${{ inputs.WORKING_DIR }}
         aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
         cat .env
+        gem install eb_deployer
         git ls-files | zip app.zip -@
         env -S "$(cat .env)" >> $GITHUB_ENV
         source .env
