@@ -63,5 +63,6 @@ runs:
       working-directory: ./${{ inputs.WORKING_DIR }}
       run: |
         aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./${{ inputs.WORKING_DIR }}/terraform.tfvars.json
+        cat terraform.tfvars.json
         terraform plan
 
