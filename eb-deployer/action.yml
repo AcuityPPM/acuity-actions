@@ -74,10 +74,10 @@ runs:
 
     - name: Install Hasura CLI & Apply Metadata
       working-directory: ${{ inputs.HASURA_DIR }}
-        run: |
-          aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
-          set -o allexport
-          source .env
-          set +o allexport
-          npm install --global hasura-cli &&
-          hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint $HASURA_ENDPOINT --skip-update-check
+      run: |
+        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        npm install --global hasura-cli &&
+        hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint $HASURA_ENDPOINT --skip-update-check
