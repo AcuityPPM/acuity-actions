@@ -64,3 +64,5 @@ runs:
       run: |
         aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
         terraform apply -auto-approve
+
+
