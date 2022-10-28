@@ -1,4 +1,4 @@
-name: 'Deploy with eb_deployer'
+name: eb-deployer
 description: Deploy a zip file using eb_deployer
 inputs:
   ENVIRONMENT:

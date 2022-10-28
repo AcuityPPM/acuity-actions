@@ -1,0 +1,67 @@
+name: terraform-apply
+description: Run terraform apply on environments
+
+inputs:
+  ENVIRONMENT:
+    description: environment name
+    required: true
+  AWS_ACCESS_KEY_ID:
+    description: role to assume
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: role to assume
+    required: true
+  WORKING_DIR:
+    description: The dir of the tf
+    required: true
+  AWS_REGION:
+    description: the region to deploy to
+    required: false
+    default: us-east-1
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Check Terraform Version
+      id: terraform-version
+      shell: bash
+      run: |
+        VERSION_FILE="${{ github.workspace }}/.terraform-version"
+        if [ -f "$VERSION_FILE" ]; then
+            echo ".terraform-version file exists reading version defined in it."
+            echo ::set-output name=version::$(cat $VERSION_FILE)
+        else
+            echo ".terraform-version does not exist. Using `latest`"
+            echo ::set-output name=version::latest
+        fi
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: ${{ steps.terraform-version.outputs.version }}
+
+    - name: Terraform fmt
+      id: fmt
+      shell: bash
+      working-directory: ./${{ inputs.WORKING_DIR }}
+      run: |
+        aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
+        terraform fmt -check
+
+    - name: Terraform init
+      id: init
+      shell: bash
+      working-directory: ./${{ inputs.WORKING_DIR }}
+      run: terraform init
+    - name: Terraform Apply
+      shell: bash
+      working-directory: ./${{ inputs.WORKING_DIR }}
+      run: terraform apply -auto-approve
