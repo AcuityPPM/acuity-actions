@@ -10,6 +10,10 @@ inputs:
   AWS_SECRET_ACCESS_KEY:
     description: role to assume
     required: true
+  HASURA_DIR:
+    description: The dir of the rails app
+    required: false
+    default: .
   WORKING_DIR:
     description: The dir of the rails app
     required: false
@@ -32,7 +36,8 @@ runs:
     - name: Otherwise, check .ruby-version
       if: ${{ ! inputs.RUBY_VERSION }}
       shell: bash
-      run: cd ${{ inputs.WORKING_DIR }} && echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1.110.0
       with:
@@ -40,7 +45,8 @@ runs:
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Install dependencies
       shell: bash
-      run: cd ${{ inputs.WORKING_DIR }} && bundle install --path vendor/bundle
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run:  bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -49,8 +55,8 @@ runs:
         aws-region: us-east-1
     - name: Deploy
       shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        cd ${{ inputs.WORKING_DIR }}
         gem install eb_deployer
         aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
@@ -63,3 +69,15 @@ runs:
       id: check-deploy-failure
       shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
+    - name: Setup node
+      uses: actions/setup-node@v2
+
+    - name: Install Hasura CLI & Apply Metadata
+      working-directory: ${{ inputs.HASURA_DIR }}
+        run: |
+          aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+          set -o allexport
+          source .env
+          set +o allexport
+          npm install --global hasura-cli &&
+          hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint $HASURA_ENDPOINT --skip-update-check
