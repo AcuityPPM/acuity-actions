@@ -52,10 +52,7 @@ runs:
       id: fmt
       shell: bash
       working-directory: ./${{ inputs.WORKING_DIR }}
-      run: |
-        aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
-        terraform fmt -check
-
+      run: terraform fmt -check
     - name: Terraform init
       id: init
       shell: bash
@@ -64,5 +61,7 @@ runs:
     - name: Terraform Plan
       shell: bash
       working-directory: ./${{ inputs.WORKING_DIR }}
-      run: terraform plan
+      run: |
+        aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
+        terraform plan
 
