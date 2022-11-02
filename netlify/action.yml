@@ -60,7 +60,7 @@ runs:
         set +o allexport
         netlify link --name ${{ inputs.ENVIRONMENT}}
         netlify build
-        netlify env:import
+        netlify env:import .env
         netlify deploy
     - name: Check Deploy Failure
       if: ${{ failure() }}
