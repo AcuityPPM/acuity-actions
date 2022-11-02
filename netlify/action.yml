@@ -1,0 +1,68 @@
+name: netlify
+description: Deploy to netlify
+inputs:
+  ENVIRONMENT:
+    description: environment name
+    required: true
+  AWS_ACCESS_KEY_ID:
+    description: role to assume
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: role to assume
+    required: true
+  WORKING_DIR:
+    description: The dir of the frontend app
+    required: false
+    default: .
+  AWS_REGION:
+    description: the region to deploy to
+    required: false
+    default: us-east-1
+  NODE_VERSION:
+    description: the version of node to use (optional, in place of .node-version file)
+    required: false
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - name: Use node version user input if present
+      if: ${{ inputs.NODE_VERSION }}
+      shell: bash
+      run: echo "NODE_VERSION=${{ inputs.NODE_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .node-version
+      if: ${{ ! inputs.NODE_VERSION }}
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "NODE_VERSION=`cat .node-version`" >> $GITHUB_ENV
+    - name: Setup node
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION}}
+
+    - name: Yarn install dependencies
+      working-directory: ${{ inputs.WORKING_DIR }}
+      shell: bash
+      run: yarn install --frozen-lockfile
+    - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Deploy
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: |
+        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        netlify link --name ${{ inputs.ENVIRONMENT}}
+        netlify build
+        netlify env:import
+        netlify deploy
+    - name: Check Deploy Failure
+      if: ${{ failure() }}
+      id: check-deploy-failure
+      shell: bash
+      run: echo '::set-output name=DEPLOY_FAILED::true'
