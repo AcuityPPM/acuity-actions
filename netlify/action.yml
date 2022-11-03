@@ -61,7 +61,7 @@ runs:
         netlify link --name ${{ inputs.ENVIRONMENT}}
         netlify build
         netlify env:import .env
-        netlify deploy
+        netlify deploy -p
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
