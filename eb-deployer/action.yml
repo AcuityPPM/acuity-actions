@@ -58,7 +58,7 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
         gem install eb_deployer
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
         source .env
         set +o allexport
@@ -76,7 +76,7 @@ runs:
       working-directory: ${{ inputs.HASURA_DIR }}
       shell: bash
       run: |
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
         source .env
         set +o allexport

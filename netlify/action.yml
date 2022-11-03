@@ -53,8 +53,8 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        aws s3 cp s3://acutity-env/${{ inputs.ENVIRONMENT}} ./.env
-        echo REACT_APP_GITHUB_SHA=${{ env.GITHUB_SHA }} >> .env
+        aws s3 cp s3://acutity-env/frontend/${{ inputs.ENVIRONMENT}} ./.env
+        echo REACT_APP_GITHUB_SHA=${{ github.sha }} >> .env
         set -o allexport
         source .env
         set +o allexport
