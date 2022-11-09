@@ -63,7 +63,7 @@ runs:
         source .env
         set +o allexport
         git ls-files | zip app.zip -@
-        bundle exec eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
+        eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
