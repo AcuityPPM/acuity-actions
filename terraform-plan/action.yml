@@ -18,6 +18,10 @@ inputs:
     description: the region to deploy to
     required: false
     default: us-east-1
+  GITHUB_TOKEN:
+    description: the region to deploy to
+    required: false
+    default: us-east-1
 
 runs:
   using: composite
@@ -60,18 +64,17 @@ runs:
     - name: Terraform Plan
       working-directory: ./${{ inputs.WORKING_DIR }}
       id: plan
+      shell: bash
       run: |
         set -o pipefail
         aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
         terraform plan -no-color | tee /tmp/plan.txt
-      working-directory: ./${{ inputs.WORKING_DIR }}
       continue-on-error: true
     - name: Update Pull Request
       uses: actions/github-script@v5
-      working-directory: ./${{ inputs.WORKING_DIR }}
       if: github.event_name == 'pull_request'
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.GITHUB_TOKEN }}
         script: |
           const fs = require("fs");
           var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
