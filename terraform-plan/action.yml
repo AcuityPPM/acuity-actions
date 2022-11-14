@@ -29,7 +29,6 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-
     - name: Check Terraform Version
       id: terraform-version
       shell: bash
@@ -59,9 +58,35 @@ runs:
       working-directory: ./${{ inputs.WORKING_DIR }}
       run: terraform init
     - name: Terraform Plan
-      shell: bash
       working-directory: ./${{ inputs.WORKING_DIR }}
+      id: plan
       run: |
+        set -o pipefail
         aws s3 cp s3://acutity-env/tf/${{ inputs.ENVIRONMENT}} ./terraform.tfvars.json
-        terraform plan
-
+        terraform plan -no-color | tee /tmp/plan.txt
+      working-directory: ./${{ inputs.WORKING_DIR }}
+      continue-on-error: true
+    - name: Update Pull Request
+      uses: actions/github-script@v5
+      working-directory: ./${{ inputs.WORKING_DIR }}
+      if: github.event_name == 'pull_request'
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require("fs");
+          var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
+          plan = plan.replace(/^.*Refreshing state\.\.\..*(\r\n|\n|\r)?/gm, "");
+          const output = `#### Terraform Format and Style 🖌\`${{ steps.tf-plan-setup.outputs.fmt_outcome }}\`
+          #### Terraform Initialization ⚙️\`${{ steps.tf-plan-setup.outputs.init_outcome }}\`
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+          #### Terraform Validation 🤖\`${{ steps.tf-plan-setup.outputs.validate_outcome }}\`
+          <details><summary>Show Plan</summary>
+          \`\`\`${ plan }\`\`\`
+          </details>
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
