@@ -84,7 +84,15 @@ runs:
           const fs = require("fs");
           var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
           plan = plan.replace(/^.*Refreshing state\.\.\..*(\r\n|\n|\r)?/gm, "");
+          changes = "true"
+          if [[ $plan == *"No changes"* ]]; then
+            changes = "false"
+          fi
+
           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform PLAN CHANGES 🚨\`${changes}\`
+
+
           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
           #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
