@@ -85,9 +85,7 @@ runs:
           var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
           plan = plan.replace(/^.*Refreshing state\.\.\..*(\r\n|\n|\r)?/gm, "");
           var changes = "true"
-          if (plan.includes("No changes") {
-            changes = "false"
-          }
+          plan.includes("No changes") ? changes = "false" : changes = "true";
 
 
           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
