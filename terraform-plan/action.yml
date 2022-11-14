@@ -88,8 +88,8 @@ runs:
           plan.includes("No changes") ? changes = false : changes = true;
 
 
-          #### Terraform Environment 🚨\`${{ inputs.ENVIRONMENT }}\`
           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform Environment 🚨\`${{ inputs.ENVIRONMENT }}\`
           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
           #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
