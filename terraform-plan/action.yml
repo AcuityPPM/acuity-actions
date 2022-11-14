@@ -88,21 +88,17 @@ runs:
           plan.includes("No changes") ? changes = false : changes = true;
 
 
-          #### Terraform PLAN CHANGES 🚨\`${changes}\`
           const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
           #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-          #### Terraform PLAN CHANGES 🚨\`${changes}\`
           <details><summary>Show Plan</summary>
           \`\`\`${ plan }\`\`\`
           </details>
-          if (changes) {
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-            github.rest.issues.createComment({
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          changes ? github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: output
-            })
-          }
+          }) : console.log("No changes");
