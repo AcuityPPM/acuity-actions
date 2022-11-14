@@ -84,8 +84,8 @@ runs:
           const fs = require("fs");
           var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
           plan = plan.replace(/^.*Refreshing state\.\.\..*(\r\n|\n|\r)?/gm, "");
-          var changes = "true"
-          plan.includes("No changes") ? changes = "false" : changes = "true";
+          var changes = true
+          plan.includes("No changes") ? changes = false : changes = true;
 
 
           #### Terraform PLAN CHANGES 🚨\`${changes}\`
@@ -97,7 +97,7 @@ runs:
           <details><summary>Show Plan</summary>
           \`\`\`${ plan }\`\`\`
           </details>
-          if (changes == "true") {
+          if (changes) {
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
