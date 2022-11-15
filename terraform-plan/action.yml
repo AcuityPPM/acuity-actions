@@ -84,7 +84,7 @@ runs:
           const fs = require("fs");
           var plan = fs.readFileSync("/tmp/plan.txt", "utf8");
           plan = plan.replace(/^.*Refreshing state\.\.\..*(\r\n|\n|\r)?/gm, "");
-          var changes = true
+          var changes = true;
           plan.includes("No changes") ? changes = false : changes = true;
 
 
