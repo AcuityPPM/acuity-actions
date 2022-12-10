@@ -62,6 +62,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
+        bundle exec rake db:migrate
         git ls-files | zip app.zip -@
         eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
