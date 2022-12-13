@@ -1,12 +1,6 @@
 name: db-reset
 description: resets/migrate the db of an env
 inputs:
-  MIGRATE_DB:
-    description: migrate db?
-    required: true
-  DROP_DB:
-    description: drop db?
-    required: true
   ENVIRONMENT:
     description: environment name
     required: true
@@ -55,19 +49,8 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-    - name: Drop DB
-      shell: bash
-      if: ${{ inputs.DROP_DB }}
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: |
-        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
-        set -o allexport
-        source .env
-        set +o allexport
-        bundle exec rake db:drop
     - name: Migrate DB
       shell: bash
-      if: ${{ inputs.MIGRATE_DB }}
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
