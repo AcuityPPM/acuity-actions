@@ -1,6 +1,12 @@
 name: db-reset
 description: resets/migrate the db of an env
 inputs:
+  MIGRATE_DB:
+    description: migrate db?
+    required: true
+  DROP_DB:
+    description: drop db?
+    required: true
   ENVIRONMENT:
     description: environment name
     required: true
