@@ -1,0 +1,76 @@
+name: db-reset
+description: resets/migrate the db of an env
+inputs:
+  ENVIRONMENT:
+    description: environment name
+    required: true
+  AWS_ACCESS_KEY_ID:
+    description: role to assume
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: role to assume
+    required: true
+  WORKING_DIR:
+    description: The dir of the rails app
+    required: false
+    default: .
+  AWS_REGION:
+    description: the region to deploy to
+    required: false
+    default: us-east-1
+  RUBY_VERSION:
+    description: the version of ruby to use (optional, in place of .ruby-version file)
+    required: false
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - name: Use ruby version user input if present
+      if: ${{ inputs.RUBY_VERSION }}
+      shell: bash
+      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .ruby-version
+      if: ${{ ! inputs.RUBY_VERSION }}
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1.126.0
+      with:
+        bundler-cache: true
+        ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run:  bundle install --path vendor/bundle
+    - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Drop DB
+      shell: bash
+      if: ${{ inputs.DROP_DB }}
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: |
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        bundle exec rake db:drop
+    - name: Migrate DB
+      shell: bash
+      if: ${{ inputs.MIGRATE_DB }}
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: |
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        bundle exec rake db:migrate
+    - name: Check Deploy Failure
+      if: ${{ failure() }}
+      id: check-deploy-failure
+      shell: bash
+      run: echo '::set-output name=DEPLOY_FAILED::true'
