@@ -21,7 +21,6 @@ inputs:
   GITHUB_TOKEN:
     description: the region to deploy to
     required: false
-    default: us-east-1
 
 runs:
   using: composite
@@ -32,7 +31,7 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: ${{ inputs.AWS_REGION }}
     - name: Check Terraform Version
       id: terraform-version
       shell: bash
