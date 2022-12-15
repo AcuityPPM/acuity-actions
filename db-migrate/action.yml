@@ -57,7 +57,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        bundle exec rake db:migrate
+        rake db:migrate
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
