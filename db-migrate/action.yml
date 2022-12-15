@@ -53,6 +53,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
+        gem install rake -v 13.0.6
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
         source .env
