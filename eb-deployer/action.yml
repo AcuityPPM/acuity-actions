@@ -53,6 +53,17 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
+    - name: Add public IP to AWS security group
+      uses: sohelamin/aws-security-group-add-ip-action@master
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ inputs.AWS_REGION }}
+        aws-security-group-id: "allow_internal_postgres_in-${{ inputs.ENVIRONMENT}}"
+        port: '5432'
+        to-port: '5432'
+        protocol: 'tcp'
+        description: 'GitHub Action'
     - name: Deploy
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
