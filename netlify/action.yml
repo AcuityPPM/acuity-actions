@@ -70,7 +70,7 @@ runs:
       uses: slackapi/slack-github-action@v1.23.0
       with:
         channel-id: 'C04GQE833LY'
-        slack-message: "Netlify deployed to ${{ inputs.ENVIRONMENT}}\n GitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref }}\n Git SHA: ${{ github.sha }}"
+        slack-message: "Netlify deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \n Git SHA: ${{ github.sha }}"
       env:
         SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
     - name: Check Deploy Failure
