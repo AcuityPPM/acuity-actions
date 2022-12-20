@@ -25,6 +25,9 @@ inputs:
   RUBY_VERSION:
     description: the version of ruby to use (optional, in place of .ruby-version file)
     required: false
+  SLACK_BOT_TOKEN:
+    description: slackbot token
+    required: true
 runs:
   using: composite
   steps:
@@ -83,3 +86,13 @@ runs:
         set +o allexport
         npm install --global hasura-cli &&
         hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint  "https://$HASURA_ENDPOINT" --skip-update-check
+    - name: Post to a Slack channel
+      id: slack
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        channel-id: 'C04GQE833LY'
+        slack-message: "Rails API deployed to ${{ inputs.ENVIRONMENT}}\n GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+      env:
+        SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
+
+
