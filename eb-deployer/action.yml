@@ -25,13 +25,24 @@ inputs:
   RUBY_VERSION:
     description: the version of ruby to use (optional, in place of .ruby-version file)
     required: false
+  GIT_SHA:
+    description: the git sha you want to deploy
+    required: false
   SLACK_BOT_TOKEN:
     description: slackbot token
     required: true
+
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v3
+    - name: Checkout from GIT_SHA
+      if: ${{ inputs.GIT_SHA}}
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.GIT_SHA }}
+    - name: Otherwise, Checkout from HEAD
+      if: ${{ ! inputs.GIT_SHA }}
+      uses: actions/checkout@v3
     - name: Use ruby version user input if present
       if: ${{ inputs.RUBY_VERSION }}
       shell: bash
@@ -60,13 +71,15 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
+        sed -i.backup -e "s|GIT_SHA|${{ github.sha }}|g" Dockerrun.aws.json
+        sed -i.backup -e "s|REGION|${{ inputs.AWS_REGION }}|g" Dockerrun.aws.json
         gem install eb_deployer
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
         source .env
         set +o allexport
         bundle exec rake db:migrate
-        git ls-files | zip app.zip -@
+        zip -r app.zip Dockerrun.aws.json entrypoint.sh .ebextensions/
         eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
     - name: Check Deploy Failure
       if: ${{ failure() }}
