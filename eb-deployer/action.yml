@@ -66,7 +66,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        sed -i.backup -e "s|GIT_SHA|${{ github.sha }}|g" Dockerrun.aws.json
+        sed -i.backup -e "s|GIT_SHA|${{ inputs.GIT_SHA }}|g" Dockerrun.aws.json
         sed -i.backup -e "s|REGION|${{ inputs.AWS_REGION }}|g" Dockerrun.aws.json
         cat Dockerrun.aws.json
         gem install eb_deployer
