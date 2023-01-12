@@ -1,6 +1,10 @@
 name: eb-deployer
 description: Deploy a zip file using eb_deployer
 inputs:
+  PHOENIX_MODE_WORKFLOW:
+    description: Deploy ENV from scratch
+    required: true
+    default: false
   ENVIRONMENT:
     description: environment name
     required: true
@@ -75,6 +79,7 @@ runs:
         sed -i.backup -e "s|REGION|${{ inputs.AWS_REGION }}|g" Dockerrun.aws.json
         gem install eb_deployer
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        echo PHOENIX_MODE_WORKFLOW=${{ inputs.PHOENIX_MODE_WORKFLOW }} >> .env
         set -o allexport
         source .env
         set +o allexport
