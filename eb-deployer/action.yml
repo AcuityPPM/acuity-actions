@@ -52,6 +52,10 @@ runs:
       with:
         bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run:  bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v1
       with:
