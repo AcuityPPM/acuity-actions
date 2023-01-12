@@ -4,7 +4,7 @@ inputs:
   PHOENIX_MODE_WORKFLOW:
     description: Deploy ENV from scratch
     required: true
-    default: false
+    type: boolean
   ENVIRONMENT:
     description: environment name
     required: true
