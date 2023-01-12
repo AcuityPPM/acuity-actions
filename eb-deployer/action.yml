@@ -4,7 +4,6 @@ inputs:
   PHOENIX_MODE_WORKFLOW:
     description: Deploy ENV from scratch
     required: true
-    type: boolean
   ENVIRONMENT:
     description: environment name
     required: true
@@ -26,9 +25,6 @@ inputs:
     description: the region to deploy to
     required: false
     default: us-east-1
-  RUBY_VERSION:
-    description: the version of ruby to use (optional, in place of .ruby-version file)
-    required: false
   GIT_SHA:
     description: the git sha you want to deploy
     required: false
@@ -47,12 +43,7 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v3
-    - name: Use ruby version user input if present
-      if: ${{ inputs.RUBY_VERSION }}
-      shell: bash
-      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
-    - name: Otherwise, check .ruby-version
-      if: ${{ ! inputs.RUBY_VERSION }}
+    - name: check .ruby-version
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
