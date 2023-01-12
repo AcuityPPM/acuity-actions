@@ -68,6 +68,7 @@ runs:
       run: |
         sed -i.backup -e "s|GIT_SHA|${{ github.sha }}|g" Dockerrun.aws.json
         sed -i.backup -e "s|REGION|${{ inputs.AWS_REGION }}|g" Dockerrun.aws.json
+        cat Dockerrun.aws.json
         gem install eb_deployer
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         echo PHOENIX_MODE_WORKFLOW=${{ inputs.PHOENIX_MODE_WORKFLOW }} >> .env
