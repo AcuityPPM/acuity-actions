@@ -75,6 +75,8 @@ runs:
         set -o allexport
         source .env
         set +o allexport
+        sed -i.backup -e "s|awslogs-rails|awslogs-rails-$RAILS_ENV|g" Dockerrun.aws.json
+        sed -i.backup -e "s|awslogs-nginx|awslogs-nginx-$RAILS_ENV|g" Dockerrun.aws.json
         bundle exec rake db:migrate
         zip -r app.zip Dockerrun.aws.json entrypoint.sh .ebextensions/
         eb_deploy -p app.zip -e ${{ inputs.ENVIRONMENT}}
