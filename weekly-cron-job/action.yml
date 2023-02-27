@@ -59,4 +59,5 @@ runs:
          set +o allexport
          # list of all weekly cron jobs
          bundle exec rake portfolio_snapshot:project_health_count
+         bundle exec rake project_snapshot:project
       shell: bash
