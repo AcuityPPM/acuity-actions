@@ -76,7 +76,7 @@ runs:
         set +o allexport
         sed -i.backup -e "s|awslogs-rails|awslogs-rails-$RAILS_ENV|g" Dockerrun.aws.json
         sed -i.backup -e "s|awslogs-nginx|awslogs-nginx-$RAILS_ENV|g" Dockerrun.aws.json
-        if [ ${{ inputs.ENVIRONMENT}} == "prod" ]; then
+        if [ ${{ inputs.ENVIRONMENT}} == "prod" ] || [ ${{ inputs.ENVIRONMENT}} == "caat" ]; then
           echo "Prod env changing cpu and memory"
           sed -i.backup -e "s|1600|3600|g" Dockerrun.aws.json
           sed -i.backup -e "s|1024|2024|g" Dockerrun.aws.json
