@@ -4,6 +4,9 @@ inputs:
   ENVIRONMENT:
     description: environment name
     required: true
+  DB_SG:
+    description: database security group
+    required: true
   AWS_ACCESS_KEY_ID:
     description: role to assume
     required: true
@@ -39,6 +42,18 @@ runs:
       with:
         bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Add public IP to AWS security group
+      uses: sohelamin/aws-security-group-add-ip-action@master
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'us-east-1'
+        aws-security-group-id: ${{ inputs.DB_SG }}
+        port: '5432'
+        to-port: '5432'
+        protocol: 'tcp'
+        description: 'GitHub Action'
+
     - name: Install dependencies
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
