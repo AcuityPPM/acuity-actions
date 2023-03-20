@@ -47,7 +47,7 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'us-east-1'
+        aws-region: ${{ inputs.AWS_REGION }}
         aws-security-group-id: ${{ inputs.DB_SG }}
         port: '5432'
         to-port: '5432'
@@ -62,7 +62,7 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: ${{ inputs.AWS_REGION }}
     - name: Create Snapshot
       working-directory: rails_api
       run: |
