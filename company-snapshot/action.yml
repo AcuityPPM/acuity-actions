@@ -75,3 +75,9 @@ runs:
          # purge all snapshots older than 90 days
          bundle exec rake company_snapshots:data_purge_company_snapshot
       shell: bash
+    - name: Retry workflow if failed
+      uses: nick-fields/retry@v2
+      with:
+        max_attempts: 2
+        retry_on: error
+        timeout_seconds: 5
