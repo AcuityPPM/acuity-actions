@@ -105,7 +105,7 @@ runs:
       shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
     - name: Setup node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
 
     - name: Install Hasura CLI & Apply Metadata
       working-directory: ${{ inputs.HASURA_DIR }}

@@ -38,7 +38,7 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "NODE_VERSION=`cat .node-version`" >> $GITHUB_ENV
     - name: Setup node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ env.NODE_VERSION}}
 
