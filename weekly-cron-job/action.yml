@@ -43,20 +43,20 @@ runs:
         bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Add public IP to AWS security group
-      uses: sohelamin/aws-security-group-add-ip-action@master
+      uses: mnavarrocarter/authorize-aws-security-group-ingress-action@v1.0.0
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
         aws-security-group-id: ${{ inputs.DB_SG }}
-        port: '5432'
-        to-port: '5432'
-        protocol: 'tcp'
-        description: 'GitHub Action'
+        port: "5432"
+        to-port: "5432"
+        protocol: "tcp"
+        description: "GitHub Action"
     - name: Install dependencies
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
-      run:  bundle install --path vendor/bundle
+      run: bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -66,12 +66,12 @@ runs:
     - name: Run Weekly Cron Job
       working-directory: rails_api
       run: |
-         ls
-         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
-         set -o allexport
-         source .env
-         set +o allexport
-         # list of all weekly cron jobs
-         bundle exec rake portfolio_snapshot:project_health_count
-         bundle exec rake project_snapshot:project
+        ls
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        # list of all weekly cron jobs
+        bundle exec rake portfolio_snapshot:project_health_count
+        bundle exec rake project_snapshot:project
       shell: bash
