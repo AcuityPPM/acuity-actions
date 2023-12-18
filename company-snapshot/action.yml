@@ -38,7 +38,7 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
-      uses: ruby/setup-ruby@v1.126.0
+      uses: ruby/setup-ruby@v1.129.0
       with:
         bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
