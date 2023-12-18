@@ -54,6 +54,7 @@ runs:
       uses: ruby/setup-ruby@v1.126.0
       with:
         bundler-cache: true
+        bundler: 2.4.3
         ruby-version: ${{ env.RUBY_VERSION }}
     - name: Add public IP to AWS security group
       uses: mnavarrocarter/authorize-aws-security-group-ingress-action@v1.0.0
