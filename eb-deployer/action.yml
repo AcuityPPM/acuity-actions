@@ -51,7 +51,7 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Set up Ruby
-      uses: ruby/setup-ruby@v1.126.0
+      uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
         bundler: 2.4.3
@@ -83,7 +83,7 @@ runs:
       run: |
         sed -i.backup -e "s|GIT_SHA|${{ inputs.GIT_SHA }}|g" Dockerrun.aws.json
         sed -i.backup -e "s|REGION|${{ inputs.AWS_REGION }}|g" Dockerrun.aws.json
-        gem install eb_deployer
+        gem install man_eb_deployer
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         echo PHOENIX_MODE_WORKFLOW=${{ inputs.PHOENIX_MODE_WORKFLOW }} >> .env
         set -o allexport
