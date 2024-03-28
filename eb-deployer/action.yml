@@ -116,7 +116,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=${{ inputs.HASURA_DIR }} &&
+        npm install --global hasura-cli@2.36.1 &&
         hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint  "https://$HASURA_ENDPOINT" --skip-update-check
     - name: Post to a Slack channel
       id: slack
