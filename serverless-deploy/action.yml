@@ -89,7 +89,7 @@ runs:
         source .env
         set +o allexport  
         bundle exec rake db:migrate      
-        CNAME=acuity-${{ inputs.ENVIRONMENT}} RAILS_ENV=${{ inputs.ENVIRONMENT}} JETS_ENV=${{ inputs.ENVIRONMENT}} bundle exec jets deploy -y
+        CERT_ARN=${{ inputs.CERT_ARN }} CNAME=acuity-${{ inputs.ENVIRONMENT}} RAILS_ENV=${{ inputs.ENVIRONMENT}} JETS_ENV=${{ inputs.ENVIRONMENT}} bundle exec jets deploy -y
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
