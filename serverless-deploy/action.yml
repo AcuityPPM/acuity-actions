@@ -1,0 +1,119 @@
+name: serverless-deploy
+description: Deploy a using ruby-on-jets
+inputs:
+  ENVIRONMENT:
+    description: environment name
+    required: true
+  DB_SG:
+    description: database security group
+    required: true
+  AWS_ACCESS_KEY_ID:
+    description: role to assume
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: role to assume
+    required: true
+  JETS_API_KEY:
+    description: role to assume
+    required: true
+  HASURA_DIR:
+    description: The dir of the rails app
+    required: false
+    default: .
+  WORKING_DIR:
+    description: The dir of the rails app
+    required: false
+    default: .
+  AWS_REGION:
+    description: the region to deploy to
+    required: false
+    default: us-east-1
+  GIT_SHA:
+    description: the git sha you want to deploy
+    required: false
+  SLACK_BOT_TOKEN:
+    description: slackbot token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout from GIT_SHA
+      if: ${{ inputs.GIT_SHA}}
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.GIT_SHA }}
+    - name: Otherwise, Checkout from HEAD
+      if: ${{ ! inputs.GIT_SHA }}
+      uses: actions/checkout@v4
+    - name: check .ruby-version
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        bundler: 2.4.3
+        ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Add public IP to AWS security group
+      uses: mnavarrocarter/authorize-aws-security-group-ingress-action@v1.0.0
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ inputs.AWS_REGION }}
+        aws-security-group-id: ${{ inputs.DB_SG }}
+        port: "5432"
+        to-port: "5432"
+        protocol: "tcp"
+        description: "GitHub Action"
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: bundle install --path vendor/bundle
+    - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ inputs.AWS_REGION }}
+    - name: Deploy
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: |
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        rm -f ./config/jets/env/.env
+        mkdir -p ./config/jets/env/
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./config/jets/env/.env
+        set -o allexport
+        source .env
+        set +o allexport  
+        bundle exec rake db:migrate      
+        CNAME=acuity-${{ inputs.ENVIRONMENT}} RAILS_ENV=${{ inputs.ENVIRONMENT}} bundle exec jets deploy -y
+
+    - name: Check Deploy Failure
+      if: ${{ failure() }}
+      id: check-deploy-failure
+      shell: bash
+      run: echo '::set-output name=DEPLOY_FAILED::true'
+    - name: Setup node
+      uses: actions/setup-node@v3
+
+    - name: Install Hasura CLI & Apply Metadata
+      working-directory: ${{ inputs.HASURA_DIR }}
+      shell: bash
+      run: |
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        npm install --global hasura-cli@2.36.1 &&
+        hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint  "https://$HASURA_ENDPOINT" --skip-update-check
+    - name: Post to a Slack channel
+      id: slack
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        channel-id: "C04GQE833LY"
+        slack-message: "Serverless Rails API deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \nGit SHA: ${{ inputs.GIT_SHA }}"
+      env:
+        SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
