@@ -78,6 +78,8 @@ runs:
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
     - name: Deploy
+      env:
+        JETS_API_KEY:  ${{ inputs.JETS_API_KEY }}
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
