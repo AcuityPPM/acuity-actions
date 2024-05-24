@@ -24,6 +24,12 @@ inputs:
   SLACK_BOT_TOKEN:
     description: slackbot token
     required: true
+  BRYNTUM_AUTH_TOKEN:
+    description: bryntum auth token
+    required: true
+  BRYNTUM_LOCATION:
+    description: bryntum location (eu/us)
+    required: true
 runs:
   using: composite
   steps:
@@ -47,7 +53,7 @@ runs:
       shell: bash
       run: |
         npm config set "@bryntum:registry=https://npm.bryntum.com"
-        npm config set "//npm.bryntum.com/:_authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWFsX2dyb3VwcyI6WyJ0cmlhbCIsImdhbnR0Il0sIm5hbWUiOiJvbGVnLmJlcmR5c2hldi4uYWN1aXR5cHBtLmNvbSIsImdyb3VwcyI6WyJ0cmlhbCIsImdhbnR0IiwiJGFsbCIsIiRhdXRoZW50aWNhdGVkIiwiQGFsbCIsIkBhdXRoZW50aWNhdGVkIiwiYWxsIl0sImlhdCI6MTcxNjQ3NzQ0NiwibmJmIjoxNzE2NDc3NDQ2LCJleHAiOjI1ODAzOTEwNDZ9.SSyX1QKLKpCvWR64cof8-Spcht75-v04_dNb5QB_hcI"
+        npm config set "//${{ inputs.BRYNTUM_LOCATION }}/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
 
         yarn global add node-gyp
         yarn install --frozen-lockfile
