@@ -27,9 +27,6 @@ inputs:
   BRYNTUM_AUTH_TOKEN:
     description: bryntum auth token
     required: true
-  BRYNTUM_LOCATION:
-    description: bryntum location (eu/us)
-    required: true
 runs:
   using: composite
   steps:
@@ -53,7 +50,7 @@ runs:
       shell: bash
       run: |
         npm config set "@bryntum:registry=https://npm.bryntum.com"
-        npm config set "//${{ inputs.BRYNTUM_LOCATION }}/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
+        npm config set "//npm.bryntum.com"/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
 
         yarn global add node-gyp
         yarn install --frozen-lockfile
