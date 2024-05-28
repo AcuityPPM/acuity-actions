@@ -74,6 +74,10 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
     - name: Deploy
       env:
         RAILS_ENV: ${{ inputs.ENVIRONMENT}}
