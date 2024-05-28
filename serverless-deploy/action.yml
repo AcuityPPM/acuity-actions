@@ -1,6 +1,12 @@
 name: serverless-deploy
 description: Deploy a using ruby-on-jets
 inputs:
+  DOCKER_USER:
+    description: Docker registry username
+    required: true
+  DOCKER_PASS:
+    description: Docker registry password
+    required: true
   PROJECT_NAME:
     description: The CodeBuild project name
     required: false
@@ -96,6 +102,8 @@ runs:
                 ruby: 3.2
             build:
               commands:
+                - echo "== DOCKER LOGIN =="
+                - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
                 - cd rails_api
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
