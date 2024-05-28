@@ -94,7 +94,7 @@ runs:
               commands:
                 - echo "== DEPLOY =="
                 - cd rails_api
-                - RAILS_ENV=${{ inputs.ENVIRONMENT}} RAILS_MASTER_KEY=anythinganythinganythinganything bin/deploy
+                - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
