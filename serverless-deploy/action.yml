@@ -124,7 +124,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        npm install --global hasura-cli@2.38.0 &&
+        npm install --global hasura-cli@2.36.1 &&
         RETRIES=5
         until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
           ((RETRIES--))
