@@ -82,6 +82,8 @@ runs:
       uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
+    - name: Setup Docker for cross architecture build
+      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     - name: Deploy
       env:
         RAILS_ENV: ${{ inputs.ENVIRONMENT}}
