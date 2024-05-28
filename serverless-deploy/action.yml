@@ -83,6 +83,7 @@ runs:
       with:
         project-name: acuity-review-remote
         disable-source-override: false
+        sourceVersion: ${{ github.head_ref || github.ref_name }} 
         buildspec-override:   |
           version: 0.2
           phases:
@@ -92,7 +93,7 @@ runs:
             build:
               commands:
                 - echo "== DEPLOY =="
-                - RAILS_ENV=${{ inputs.ENVIRONMENT}} RAILS_MASTER_KEY=anything bin/deploy
+                - RAILS_ENV=${{ inputs.ENVIRONMENT}} RAILS_MASTER_KEY=anythinganythinganythinganything bin/deploy
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
