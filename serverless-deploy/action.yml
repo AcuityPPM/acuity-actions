@@ -1,6 +1,10 @@
 name: serverless-deploy
 description: Deploy a using ruby-on-jets
 inputs:
+  PROJECT_NAME:
+    description: The CodeBuild project name
+    required: false
+    default: acuity-remote
   ENVIRONMENT:
     description: environment name
     required: true
@@ -81,7 +85,7 @@ runs:
     - name: Run CodeBuild
       uses: aws-actions/aws-codebuild-run-build@v1
       with:
-        project-name: acuity-review-remote
+        project-name: ${{ inputs.PROJECT_NAME }}
         disable-source-override: false
         sourceVersion: ${{ github.head_ref || github.ref_name }} 
         buildspec-override:   |
