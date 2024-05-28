@@ -93,7 +93,7 @@ runs:
       with:
         project-name: ${{ inputs.PROJECT_NAME }}
         disable-source-override: false
-        sourceVersion: ${{ github.head_ref || github.ref_name }} 
+        source-version-override: ${{ github.head_ref || github.ref_name }} 
         buildspec-override:   |
           version: 0.2
           phases:
