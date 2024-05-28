@@ -85,13 +85,8 @@ runs:
         aws-region: ${{ inputs.AWS_REGION }}
     - name: Deploy
       env:
-        JETS_API_KEY:  ${{ inputs.JETS_API_KEY }}
-        CERT_ARN: ${{ inputs.CERT_ARN }} 
-        CNAME: acuity-${{ inputs.ENVIRONMENT}} 
         RAILS_ENV: ${{ inputs.ENVIRONMENT}}
-        JETS_ENV: ${{ inputs.ENVIRONMENT}} 
-        VPC_ID: ${{ inputs.VPC_ID}} 
-        SUBNET_IDS: ${{ inputs.SUBNET_IDS}} 
+
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
@@ -103,7 +98,7 @@ runs:
         source .env
         set +o allexport  
         bundle exec rake db:migrate      
-        bundle exec jets deploy -y
+        bin/deploy
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
@@ -121,8 +116,17 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        npm install --global hasura-cli@2.36.1 &&
-        hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint  "https://$HASURA_ENDPOINT" --skip-update-check
+        npm install --global hasura-cli@2.38.1 &&
+        RETRIES=5
+        until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
+          ((RETRIES--))
+          if [ $RETRIES -le 0 ]; then
+           echo "Hasura metadata apply failed after multiple attempts"
+           exit 1
+          fi
+          echo "Retrying Hasura metadata apply ($RETRIES retries left)"
+          sleep 5
+        done
     - name: Post to a Slack channel
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
