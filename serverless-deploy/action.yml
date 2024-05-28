@@ -78,21 +78,21 @@ runs:
       uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
-    - name: Deploy
-      env:
-        RAILS_ENV: ${{ inputs.ENVIRONMENT}}
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: |
-        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
-        rm -f ./config/jets/env/.env
-        mkdir -p ./config/jets/env/
-        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./config/jets/env/.env
-        set -o allexport
-        source .env
-        set +o allexport  
-        bundle exec rake db:migrate      
-        bin/deploy
+    - name: Run CodeBuild
+      uses: aws-actions/aws-codebuild-run-build@v1
+      with:
+        project-name: acuity-review-remote
+        disable-source-override: false
+        buildspec-override:   |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                ruby: 3.2
+            build:
+              commands:
+                - echo "== DEPLOY =="
+                - RAILS_ENV=${{ inputs.ENVIRONMENT}} RAILS_MASTER_KEY=anything bin/deploy
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
