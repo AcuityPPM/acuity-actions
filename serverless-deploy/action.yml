@@ -4,12 +4,6 @@ inputs:
   ENVIRONMENT:
     description: environment name
     required: true
-  VPC_ID:
-    description: vpc id
-    required: true
-  SUBNET_IDS:
-    description: subnet id
-    required: true
   DB_SG:
     description: database security group
     required: true
@@ -17,9 +11,6 @@ inputs:
     description: role to assume
     required: true
   AWS_SECRET_ACCESS_KEY:
-    description: role to assume
-    required: true
-  JETS_API_KEY:
     description: role to assume
     required: true
   HASURA_DIR:
