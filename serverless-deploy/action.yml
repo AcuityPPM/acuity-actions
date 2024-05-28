@@ -93,6 +93,7 @@ runs:
             build:
               commands:
                 - echo "== DEPLOY =="
+                - cd rails_api
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} RAILS_MASTER_KEY=anythinganythinganythinganything bin/deploy
 
     - name: Check Deploy Failure
