@@ -87,7 +87,7 @@ runs:
     - name: Migrate
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
-      run: RAILS_ENV=${{ inputs.ENVIRONMENT}} sh db_migrate.sh
+      run: RAILS_ENV=${{ inputs.ENVIRONMENT}} bash db_migrate.sh
     - name: Setup SAM
       uses: aws-actions/setup-sam@v2
       with:
