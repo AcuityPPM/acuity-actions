@@ -84,6 +84,10 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
+    - name: Migrate
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: RAILS_ENV=${{ inputs.ENVIRONMENT}} sh db_migrate.sh
     - name: Setup SAM
       uses: aws-actions/setup-sam@v2
       with:
