@@ -77,7 +77,7 @@ runs:
     - name: Install dependencies
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
-      run: bundle install --path vendor/bundle
+      run: MAKE="make --jobs 8" bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v2
       with:
