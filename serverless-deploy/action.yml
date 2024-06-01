@@ -53,41 +53,12 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v4
-    - name: check .ruby-version
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-        bundler: 2.4.3
-        ruby-version: ${{ env.RUBY_VERSION }}
-    - name: Add public IP to AWS security group
-      uses: mnavarrocarter/authorize-aws-security-group-ingress-action@v1.0.0
-      with:
-        aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ inputs.AWS_REGION }}
-        aws-security-group-id: ${{ inputs.DB_SG }}
-        port: "5432"
-        to-port: "5432"
-        protocol: "tcp"
-        description: "GitHub Action"
-    - name: Install dependencies
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: MAKE="make --jobs 8" bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
-    - name: Migrate
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: RAILS_ENV=${{ inputs.ENVIRONMENT}} bash db_migrate.sh
     - name: Setup SAM
       uses: aws-actions/setup-sam@v2
       with:
