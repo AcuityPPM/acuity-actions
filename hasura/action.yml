@@ -1,16 +1,6 @@
 name: serverless-deploy
 description: Deploy a using ruby-on-jets
 inputs:
-  DOCKER_USER:
-    description: Docker registry username
-    required: true
-  DOCKER_PASS:
-    description: Docker registry password
-    required: true
-  PROJECT_NAME:
-    description: The CodeBuild project name
-    required: false
-    default: acuity-remote
   ENVIRONMENT:
     description: environment name
     required: true
@@ -20,7 +10,7 @@ inputs:
   AWS_SECRET_ACCESS_KEY:
     description: role to assume
     required: true
-  WORKING_DIR:
+  HASURA_DIR:
     description: The dir of the rails app
     required: false
     default: .
@@ -52,37 +42,35 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
-    - name: Setup SAM
-      uses: aws-actions/setup-sam@v2
-      with:
-        use-installer: true
-    - name: Run CodeBuild
-      uses: aws-actions/aws-codebuild-run-build@v1
-      with:
-        project-name: ${{ inputs.PROJECT_NAME }}
-        disable-source-override: false
-        source-version-override: ${{ github.sha }}
-        buildspec-override:   |
-          version: 0.2
-          phases:
-            install:
-              runtime-versions:
-                ruby: 3.2
-            build:
-              commands:
-                - echo "== DOCKER LOGIN =="
-                - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
-                - echo "== DEPLOY =="
-                - cd rails_api
-                - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
-    - name: Check Deploy Failure
-      if: ${{ failure() }}
-      id: check-deploy-failure
-      shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
     - name: Setup node
       uses: actions/setup-node@v3
+
+    - name: Install Hasura CLI & Apply Metadata
+      working-directory: ${{ inputs.HASURA_DIR }}
+      shell: bash
+      run: |
+        aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+        set -o allexport
+        source .env
+        set +o allexport
+        npm install --global hasura-cli@2.36.1 &&
+        RETRIES=5
+        until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
+          ((RETRIES--))
+          if [ $RETRIES -le 0 ]; then
+            echo "Hasura metadata apply failed after multiple attempts"
+            exit 1
+          fi
+          rm ./.env
+          aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
+          set -o allexport
+          source .env
+          set +o allexport
+          echo "Retrying Hasura metadata apply ($RETRIES retries left)"
+          sleep 5  # Sleep for 5 seconds before retrying
+        done
     - name: Post to a Slack channel
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
