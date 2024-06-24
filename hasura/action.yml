@@ -78,8 +78,7 @@ runs:
     
     - name: Wait before scaling down
       shell: bash
-      run: sleep 60
-
+      run: sleep 90
     - name: Scale Down ECS service
       shell: bash
       run: |

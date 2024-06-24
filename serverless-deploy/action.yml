@@ -1,5 +1,5 @@
 name: serverless-deploy
-description: Deploy a using ruby-on-jets
+description: Deploy a using AWS Codebuild
 inputs:
   DOCKER_USER:
     description: Docker registry username
@@ -34,6 +34,10 @@ inputs:
   SLACK_BOT_TOKEN:
     description: slackbot token
     required: true
+  RUN_MIGRATION:
+    description: Run Hasura migration
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -90,4 +94,16 @@ runs:
         channel-id: "C04GQE833LY"
         slack-message: "Serverless Rails API deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \nGit SHA: ${{ inputs.GIT_SHA }}"
       env:
+        SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
+    
+    - name: Call Hasura Action
+      if: ${{ inputs.RUN_MIGRATION == 'true' }}
+      uses: ./.github/actions/hasura/action.yml
+      with:
+        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        HASURA_DIR: hasura
+        AWS_REGION: ${{ inputs.AWS_REGION }}
+        GIT_SHA: ${{ inputs.GIT_SHA }}
         SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
