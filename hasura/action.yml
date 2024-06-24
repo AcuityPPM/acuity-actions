@@ -45,10 +45,9 @@ runs:
     - name: Setup node
       uses: actions/setup-node@v3
     - name: Scale up ECS service
+      shell: bash
       run: |
         aws ecs update-service --cluster hasura-${{ inputs.ENVIRONMENT }} --service ${{ inputs.ENVIRONMENT }}-service --desired-count 2
-    - name: Wait to scale up
-      run: sleep 60
     - name: Install Hasura CLI & Apply Metadata
       working-directory: ${{ inputs.HASURA_DIR }}
       shell: bash
@@ -73,10 +72,13 @@ runs:
           echo "Retrying Hasura metadata apply ($RETRIES retries left)"
           sleep 5  # Sleep for 5 seconds before retrying
         done
-
+    
     - name: Wait before scaling down
-      run: sleep 30 
+      shell: bash
+      run: sleep 10
+
     - name: Scale Down ECS service
+      shell: bash
       run: |
         aws ecs update-service --cluster hasura-${{ inputs.ENVIRONMENT }} --service ${{ inputs.ENVIRONMENT }}-service --desired-count 1
     - name: Post to a Slack channel
