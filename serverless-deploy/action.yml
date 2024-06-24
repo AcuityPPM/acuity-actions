@@ -98,7 +98,7 @@ runs:
     
     - name: Call Hasura Action
       if: ${{ inputs.RUN_MIGRATION == 'true' }}
-      uses: AcuityPPM/acuity-actions/hasura
+      uses: AcuityPPM/acuity-actions/hasura@v6.0.37
       with:
         ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
         AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
