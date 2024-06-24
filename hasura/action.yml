@@ -48,6 +48,9 @@ runs:
       shell: bash
       run: |
         aws ecs update-service --cluster hasura-${{ inputs.ENVIRONMENT }} --service ${{ inputs.ENVIRONMENT }}-service --desired-count 2
+    - name: Wait to scale up
+      shell: bash
+      run: sleep 90
     - name: Install Hasura CLI & Apply Metadata
       working-directory: ${{ inputs.HASURA_DIR }}
       shell: bash
@@ -75,7 +78,7 @@ runs:
     
     - name: Wait before scaling down
       shell: bash
-      run: sleep 10
+      run: sleep 60
 
     - name: Scale Down ECS service
       shell: bash
