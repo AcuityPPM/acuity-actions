@@ -1,5 +1,5 @@
-name: serverless-deploy
-description: Deploy a using ruby-on-jets
+name: hasura
+description: Deploy hasura
 inputs:
   ENVIRONMENT:
     description: environment name
@@ -76,6 +76,6 @@ runs:
       uses: slackapi/slack-github-action@v1.23.0
       with:
         channel-id: "C04GQE833LY"
-        slack-message: "Serverless Rails API deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \nGit SHA: ${{ inputs.GIT_SHA }}"
+        slack-message: "Hasura deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \nGit SHA: ${{ inputs.GIT_SHA }}"
       env:
         SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
