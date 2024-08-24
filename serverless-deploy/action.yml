@@ -74,6 +74,8 @@ runs:
                 ruby: 3.2.2
             build:
               commands:
+                - rbenv local 3.2.2
+                - rbenv global 3.2.2
                 - echo "== DOCKER LOGIN =="
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
