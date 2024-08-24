@@ -71,16 +71,13 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: 3.2
+                ruby: 3.2.22
             build:
               commands:
                 - echo "== DOCKER LOGIN =="
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
                 - cd rails_api
-                - echo "== Ruby Version =="
-                - ruby -v
-                - echo "== Bundle Deploy =="
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure
