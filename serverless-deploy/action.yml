@@ -71,7 +71,7 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: 3.2.22
+                ruby: 3.2.2
             build:
               commands:
                 - echo "== DOCKER LOGIN =="
