@@ -37,7 +37,7 @@ inputs:
   RUN_MIGRATION:
     description: Run Hasura migration
     required: false
-    default: false
+    default: "false"
 
 runs:
   using: composite
@@ -66,7 +66,7 @@ runs:
         project-name: ${{ inputs.PROJECT_NAME }}
         disable-source-override: false
         source-version-override: ${{ github.sha }}
-        buildspec-override:   |
+        buildspec-override: |
           version: 0.2
           phases:
             install:
