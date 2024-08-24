@@ -78,6 +78,9 @@ runs:
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
                 - cd rails_api
+                - echo "== Ruby Version =="
+                - ruby -v
+                - echo "== Bundle Deploy =="
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure
@@ -95,7 +98,7 @@ runs:
         slack-message: "Serverless Rails API deployed to ${{ inputs.ENVIRONMENT}}\nGitHub build result: ${{ job.status }}\nBranch: ${{ github.head_ref || github.ref_name }} \nGit SHA: ${{ inputs.GIT_SHA }}"
       env:
         SLACK_BOT_TOKEN: ${{ inputs.SLACK_BOT_TOKEN }}
-    
+
     - name: Call Hasura Action
       if: ${{ inputs.RUN_MIGRATION == 'true' }}
       uses: AcuityPPM/acuity-actions/hasura@v6.0.37
