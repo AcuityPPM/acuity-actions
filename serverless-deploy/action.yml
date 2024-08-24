@@ -77,6 +77,7 @@ runs:
                 - echo "== DOCKER LOGIN =="
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
+                - rbenv install --list-all
                 - cd rails_api
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
