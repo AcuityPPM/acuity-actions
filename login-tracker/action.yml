@@ -70,7 +70,7 @@ runs:
                 - bundle config --local deployment true
                 - bundle config --local path './vendor/bundle'
                 - time MAKE="make --jobs 8" bundle install
-                - RAILS_ENV=${{ inputs.ENVIRONMENT}} weekly_login_tracker_service.sh
+                - RAILS_ENV=${{ inputs.ENVIRONMENT}} ./weekly_login_tracker_service.sh
 
     - name: Check Deploy Failure
       if: ${{ failure() }}
