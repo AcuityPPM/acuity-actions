@@ -49,8 +49,8 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       shell: bash
       run: |
-        npm config set "@bryntum:registry=https://npm-us.bryntum.com"
-        npm config set "//npm-us.bryntum.com/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
+        npm config set "@bryntum:registry=https://npm.bryntum.com"
+        npm config set "//npm.bryntum.com/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
 
         yarn global add node-gyp
         yarn install --frozen-lockfile
