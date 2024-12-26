@@ -52,6 +52,9 @@ runs:
         npm config set "@bryntum:registry=https://npm.bryntum.com"
         npm config set "//npm.bryntum.com/:_authToken=${{ inputs.BRYNTUM_AUTH_TOKEN }}"
 
+        chmod +x scripts/install-build-dependencies.sh
+        sh scripts/install-build-dependencies.sh
+
         yarn global add node-gyp
         yarn install --frozen-lockfile
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
