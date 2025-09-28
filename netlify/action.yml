@@ -21,6 +21,7 @@ inputs:
   NODE_VERSION:
     description: the version of node to use (optional, in place of .node-version file)
     required: false
+    default: '22'
   SLACK_BOT_TOKEN:
     description: slackbot token
     required: true
@@ -41,9 +42,9 @@ runs:
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "NODE_VERSION=`cat .node-version`" >> $GITHUB_ENV
     - name: Setup node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.NODE_VERSION}}
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: Yarn install dependencies
       working-directory: ${{ inputs.WORKING_DIR }}
