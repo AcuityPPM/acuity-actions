@@ -58,8 +58,10 @@ runs:
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
         aws-security-group-id: ${{ inputs.DB_SG }}
-        port: '5432'
-        protocol: 'tcp'
+        port: "5432"
+        to-port: "5432"
+        protocol: "tcp"
+        description: "GitHub Action"
 
     - name: Install dependencies
       shell: bash
