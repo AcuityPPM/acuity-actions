@@ -74,7 +74,6 @@ runs:
         source .env
         set +o allexport
         netlify link --name ${{ inputs.ENVIRONMENT}}
-        netlify build
         netlify env:import .env
         netlify deploy -p
     - name: Post to a Slack channel
