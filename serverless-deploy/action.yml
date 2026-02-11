@@ -68,6 +68,9 @@ runs:
         source-version-override: ${{ github.sha }}
         buildspec-override: |
           version: 0.2
+          cache:
+            paths:
+              - 'rails_api/vendor/bundle/**/*'
           phases:
             install:
               runtime-versions:
