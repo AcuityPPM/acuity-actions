@@ -59,7 +59,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        npm install --global hasura-cli@2.48.0 &&
+        curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.48.12 bash &&
         RETRIES=5
         until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
           ((RETRIES--))
