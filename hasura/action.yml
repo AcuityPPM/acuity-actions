@@ -59,7 +59,7 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        npm install --global hasura-cli@2.36.1 &&
+        npm install --global hasura-cli@2.48.0 &&
         RETRIES=5
         until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
           ((RETRIES--))
@@ -75,7 +75,7 @@ runs:
           echo "Retrying Hasura metadata apply ($RETRIES retries left)"
           sleep 5  # Sleep for 5 seconds before retrying
         done
-    
+
     - name: Wait before scaling down
       shell: bash
       run: sleep 90
