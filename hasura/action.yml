@@ -44,6 +44,12 @@ runs:
         aws-region: ${{ inputs.AWS_REGION }}
     - name: Setup node
       uses: actions/setup-node@v3
+    - name: Cache Hasura CLI
+      id: cache-hasura-cli
+      uses: actions/cache@v4
+      with:
+        path: /usr/local/bin/hasura
+        key: hasura-cli-v2.48.12
     - name: Scale up ECS service
       shell: bash
       run: |
@@ -59,7 +65,9 @@ runs:
         set -o allexport
         source .env
         set +o allexport
-        curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.48.12 bash &&
+        if [ "${{ steps.cache-hasura-cli.outputs.cache-hit }}" != "true" ]; then
+          curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.48.12 bash
+        fi
         RETRIES=5
         until hasura metadata apply --admin-secret $HASURA_ADMIN_SECRET --endpoint "https://$HASURA_ENDPOINT" --skip-update-check; do
           ((RETRIES--))
