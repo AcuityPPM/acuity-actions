@@ -61,12 +61,14 @@ runs:
       shell: bash
       run: |
         MY_IP=$(curl -sf https://checkip.amazonaws.com)
+        echo "RUNNER_IP=${MY_IP}" >> $GITHUB_ENV
+        echo "Adding runner IP ${MY_IP}/32 to security group ${{ inputs.DB_SG }}"
         aws ec2 authorize-security-group-ingress \
           --group-id ${{ inputs.DB_SG }} \
           --protocol tcp \
           --port 5432 \
           --cidr ${MY_IP}/32 \
-          --region ${{ inputs.AWS_REGION }} || true
+          --region ${{ inputs.AWS_REGION }}
 
     - name: Install dependencies
       shell: bash
@@ -83,3 +85,17 @@ runs:
         set +o allexport
         bundle exec rake daily_jobs:run[${{ inputs.TIMEZONE }},${{ inputs.ENVIRONMENT }}]
       shell: bash
+
+    - name: Remove public IP from AWS security group
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "${{ env.RUNNER_IP }}" ]; then
+          echo "Removing runner IP ${{ env.RUNNER_IP }}/32 from security group ${{ inputs.DB_SG }}"
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ inputs.DB_SG }} \
+            --protocol tcp \
+            --port 5432 \
+            --cidr ${{ env.RUNNER_IP }}/32 \
+            --region ${{ inputs.AWS_REGION }} || true
+        fi
