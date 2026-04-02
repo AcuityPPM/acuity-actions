@@ -73,4 +73,5 @@ runs:
         set +o allexport
         # list of all weekly cron jobs
         bundle exec rake project_snapshot:project
+        bundle exec rake ai:cleanup_chat_logs
       shell: bash
