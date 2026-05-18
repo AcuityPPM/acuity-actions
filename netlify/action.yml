@@ -68,13 +68,18 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        aws s3 cp s3://acutity-env/frontend/${{ inputs.ENVIRONMENT}} ./.env
+        aws s3 cp s3://acutity-env/frontend/${{ inputs.ENVIRONMENT }} ./.env
         echo REACT_APP_GITHUB_SHA=${{ github.sha }} >> .env
         set -o allexport
         source .env
         set +o allexport
-        netlify link --name ${{ inputs.ENVIRONMENT}}
-        netlify env:import .env
+        if [ -z "${NETLIFY_SITE_ID:-}" ]; then
+          echo "NETLIFY_SITE_ID is missing in frontend/${{ inputs.ENVIRONMENT }} env file"
+          exit 1
+        fi
+        netlify link --id "$NETLIFY_SITE_ID"
+        grep -v '^NETLIFY_SITE_ID=' .env > .env.netlify
+        netlify env:import .env.netlify
         netlify deploy -p
     - name: Post to a Slack channel
       id: slack
