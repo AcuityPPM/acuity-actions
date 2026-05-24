@@ -53,12 +53,17 @@ runs:
       shell: bash
       run: |
         MY_IP=$(curl -sf https://checkip.amazonaws.com)
-        aws ec2 authorize-security-group-ingress \
+        echo "Adding runner IP ${MY_IP}/32 to security group ${{ inputs.DB_SG }}"
+        SECURITY_GROUP_RULE_ID=$(aws ec2 authorize-security-group-ingress \
           --group-id ${{ inputs.DB_SG }} \
           --protocol tcp \
           --port 5432 \
           --cidr ${MY_IP}/32 \
-          --region ${{ inputs.AWS_REGION }} || true
+          --region ${{ inputs.AWS_REGION }} \
+          --query 'SecurityGroupRules[0].SecurityGroupRuleId' \
+          --output text)
+        echo "RUNNER_IP=${MY_IP}" >> $GITHUB_ENV
+        echo "SECURITY_GROUP_RULE_ID=${SECURITY_GROUP_RULE_ID}" >> $GITHUB_ENV
     - name: Install dependencies
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
@@ -75,3 +80,22 @@ runs:
          # purge all snapshots older than 90 days
          bundle exec rake company_snapshots:data_purge_company_snapshot
       shell: bash
+    - name: Remove public IP from AWS security group
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "${SECURITY_GROUP_RULE_ID:-}" ] && [ "$SECURITY_GROUP_RULE_ID" != "None" ]; then
+          echo "Removing runner security group rule ${SECURITY_GROUP_RULE_ID} from security group ${{ inputs.DB_SG }}"
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ inputs.DB_SG }} \
+            --security-group-rule-ids "$SECURITY_GROUP_RULE_ID" \
+            --region ${{ inputs.AWS_REGION }} || true
+        elif [ -n "${RUNNER_IP:-}" ]; then
+          echo "Removing runner IP ${RUNNER_IP}/32 from security group ${{ inputs.DB_SG }}"
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ inputs.DB_SG }} \
+            --protocol tcp \
+            --port 5432 \
+            --cidr ${RUNNER_IP}/32 \
+            --region ${{ inputs.AWS_REGION }} || true
+        fi
