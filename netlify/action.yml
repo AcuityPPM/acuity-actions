@@ -28,6 +28,9 @@ inputs:
   BRYNTUM_AUTH_TOKEN:
     description: bryntum auth token
     required: true
+  NETLIFY_AUTH_TOKEN:
+    description: Netlify personal access token
+    required: true
 runs:
   using: composite
   steps:
@@ -67,19 +70,27 @@ runs:
     - name: Deploy
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ inputs.NETLIFY_AUTH_TOKEN }}
       run: |
+        trap 'rm -f .env .env.runtime .env.netlify' EXIT
         aws s3 cp s3://acutity-env/frontend/${{ inputs.ENVIRONMENT }} ./.env
         echo REACT_APP_GITHUB_SHA=${{ github.sha }} >> .env
+        grep -vE '^[[:space:]]*NETLIFY_AUTH_TOKEN=' .env > .env.runtime
         set -o allexport
-        source .env
+        source .env.runtime
         set +o allexport
         if [ -z "${NETLIFY_SITE_ID:-}" ]; then
           echo "NETLIFY_SITE_ID is missing in frontend/${{ inputs.ENVIRONMENT }} env file"
           exit 1
         fi
         netlify link --id "$NETLIFY_SITE_ID"
-        grep -v '^NETLIFY_SITE_ID=' .env > .env.netlify
-        netlify env:import .env.netlify
+        grep -vE '^[[:space:]]*(NETLIFY_SITE_ID|NETLIFY_AUTH_TOKEN)=' .env > .env.netlify
+        if ! netlify env:import .env.netlify > /dev/null 2>&1; then
+          echo "Failed to import Netlify environment variables"
+          exit 1
+        fi
+        echo "Netlify environment variables imported"
         netlify deploy -p
     - name: Post to a Slack channel
       id: slack
