@@ -41,8 +41,8 @@ runs:
       uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-        bundler: 2.4.3
         ruby-version: ${{ env.RUBY_VERSION }}
+        working-directory: ${{ inputs.WORKING_DIR }}
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -64,10 +64,6 @@ runs:
           --output text)
         echo "RUNNER_IP=${MY_IP}" >> $GITHUB_ENV
         echo "SECURITY_GROUP_RULE_ID=${SECURITY_GROUP_RULE_ID}" >> $GITHUB_ENV
-    - name: Install dependencies
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run:  MAKE="make --jobs 8" bundle install --path vendor/bundle
     - name: Create Snapshot
       working-directory: rails_api
       run: |

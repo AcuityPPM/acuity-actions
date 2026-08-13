@@ -38,6 +38,13 @@ inputs:
     description: Run Hasura migration
     required: false
     default: "false"
+  RUBY_VERSION:
+    description: Ruby version requested from CodeBuild
+    required: false
+    default: "3.2.2"
+  BUNDLER_VERSION:
+    description: Bundler version to install (defaults to Gemfile.lock)
+    required: false
 
 runs:
   using: composite
@@ -74,7 +81,7 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: 3.2.2
+                ruby: ${{ inputs.RUBY_VERSION }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
@@ -83,6 +90,14 @@ runs:
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
                 - cd rails_api
+                - |
+                  BUNDLER_VERSION="${{ inputs.BUNDLER_VERSION }}"
+                  if [ -z "$BUNDLER_VERSION" ]; then
+                    BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                  fi
+                  test -n "$BUNDLER_VERSION"
+                  gem install bundler --version "$BUNDLER_VERSION" --no-document
+                  bundle --version
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure

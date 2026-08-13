@@ -34,6 +34,9 @@ inputs:
   SLACK_BOT_TOKEN:
     description: slackbot token
     required: true
+  RUBY_VERSION:
+    description: the version of ruby to use (optional, in place of .ruby-version file)
+    required: false
 
 runs:
   using: composite
@@ -46,7 +49,12 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v3
-    - name: check .ruby-version
+    - name: Use ruby version user input if present
+      if: ${{ inputs.RUBY_VERSION }}
+      shell: bash
+      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .ruby-version
+      if: ${{ ! inputs.RUBY_VERSION }}
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
@@ -54,8 +62,8 @@ runs:
       uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-        bundler: 2.4.3
         ruby-version: ${{ env.RUBY_VERSION }}
+        working-directory: ${{ inputs.WORKING_DIR }}
     - name: Add public IP to AWS security group
       uses: mnavarrocarter/authorize-aws-security-group-ingress-action@v1.0.0
       with:
@@ -67,10 +75,6 @@ runs:
         to-port: "5432"
         protocol: "tcp"
         description: "GitHub Action"
-    - name: Install dependencies
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: MAKE="make --jobs 8" bundle install --path vendor/bundle
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v4
       with:

@@ -25,6 +25,13 @@ inputs:
   GIT_SHA:
     description: the git sha you want to deploy
     required: false
+  RUBY_VERSION:
+    description: Ruby version requested from CodeBuild
+    required: false
+    default: "3.2.2"
+  BUNDLER_VERSION:
+    description: Bundler version to install (defaults to Gemfile.lock)
+    required: false
 
 runs:
   using: composite
@@ -58,7 +65,7 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: 3.2.2
+                ruby: ${{ inputs.RUBY_VERSION }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
@@ -66,6 +73,14 @@ runs:
                 - echo "== RUN JOB =="
                 - echo '== Bundle For Deployment =='
                 - cd rails_api
+                - |
+                  BUNDLER_VERSION="${{ inputs.BUNDLER_VERSION }}"
+                  if [ -z "$BUNDLER_VERSION" ]; then
+                    BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                  fi
+                  test -n "$BUNDLER_VERSION"
+                  gem install bundler --version "$BUNDLER_VERSION" --no-document
+                  bundle --version
                 - bundle config --global silence_root_warning true
                 - bundle config --local deployment true
                 - bundle config --local path './vendor/bundle'
