@@ -4,10 +4,10 @@ Reusable GitHub Actions for Acuity PPM deployments.
 
 ## Ruby Runtime Compatibility
 
-Ruby-based actions resolve Bundler from the consumer's `Gemfile.lock`. Actions that
-start CodeBuild accept optional `RUBY_VERSION` and `BUNDLER_VERSION` inputs. The
-default Ruby remains `3.2.2` during the Ruby 4 migration window so existing
-consumers remain compatible.
+Ruby-based actions resolve Ruby from the consumer's `.ruby-version` and Bundler
+from its `Gemfile.lock`. Actions that start CodeBuild also accept optional
+`RUBY_VERSION` and `BUNDLER_VERSION` overrides. Existing consumers therefore keep
+their current versions without action-level runtime defaults.
 
 Consumers migrating to Ruby 4 should pass exact versions:
 

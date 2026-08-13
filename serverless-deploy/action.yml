@@ -39,9 +39,8 @@ inputs:
     required: false
     default: "false"
   RUBY_VERSION:
-    description: Ruby version requested from CodeBuild
+    description: the version of ruby to use (optional, in place of .ruby-version file)
     required: false
-    default: "3.2.2"
   BUNDLER_VERSION:
     description: Bundler version to install (defaults to Gemfile.lock)
     required: false
@@ -57,6 +56,15 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v4
+    - name: Use ruby version user input if present
+      if: ${{ inputs.RUBY_VERSION }}
+      shell: bash
+      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .ruby-version
+      if: ${{ ! inputs.RUBY_VERSION }}
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -81,7 +89,7 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: ${{ inputs.RUBY_VERSION }}
+                ruby: ${{ env.RUBY_VERSION }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
