@@ -45,6 +45,11 @@ inputs:
     description: Bundler version to install (defaults to Gemfile.lock)
     required: false
 
+  BUNDLE_CACHE_SCOPE:
+    description: Optional cache key prefix for the Ruby, architecture and CodeBuild image. Enables CI cleanup.
+    required: false
+    default: ""
+
 runs:
   using: composite
   steps:
@@ -75,15 +80,31 @@ runs:
       uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
+    - name: Prepare bundle cache key
+      id: bundle-cache
+      if: ${{ inputs.BUNDLE_CACHE_SCOPE != '' }}
+      shell: bash
+      env:
+        BUNDLE_CACHE_SCOPE: ${{ inputs.BUNDLE_CACHE_SCOPE }}
+      run: |
+        if [[ ! "$BUNDLE_CACHE_SCOPE" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+          echo "BUNDLE_CACHE_SCOPE must contain only letters, digits, underscores and hyphens." >&2
+          exit 1
+        fi
+        printf 'key_line=key: %s-$(codebuild-hash-files rails_api/.ruby-version rails_api/Gemfile.lock)\n' "$BUNDLE_CACHE_SCOPE" >> "$GITHUB_OUTPUT"
     - name: Run CodeBuild
       uses: aws-actions/aws-codebuild-run-build@v1
+      env:
+        CI: "true"
       with:
+        env-vars-for-codebuild: ${{ inputs.BUNDLE_CACHE_SCOPE != '' && 'CI' || '' }}
         project-name: ${{ inputs.PROJECT_NAME }}
         disable-source-override: false
         source-version-override: ${{ github.sha }}
         buildspec-override: |
           version: 0.2
           cache:
+            ${{ steps.bundle-cache.outputs.key_line }}
             paths:
               - 'rails_api/vendor/bundle/**/*'
           phases:
