@@ -41,6 +41,9 @@ inputs:
   RUBY_VERSION:
     description: the version of ruby to use (optional, in place of .ruby-version file)
     required: false
+  PREINSTALLED_RUBY_IMAGE:
+    description: Optional CodeBuild image containing the exact Ruby version in rails_api/.ruby-version. Incompatible with RUBY_VERSION.
+    required: false
   BUNDLER_VERSION:
     description: Bundler version to install (defaults to Gemfile.lock)
     required: false
@@ -53,6 +56,21 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Validate preinstalled Ruby inputs
+      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE != '' }}
+      shell: bash
+      env:
+        SELECTED_SHA: ${{ inputs.GIT_SHA }}
+        RUBY_OVERRIDE: ${{ inputs.RUBY_VERSION }}
+      run: |
+        if [[ -n "$RUBY_OVERRIDE" ]]; then
+          echo 'PREINSTALLED_RUBY_IMAGE uses rails_api/.ruby-version. Leave RUBY_VERSION empty.' >&2
+          exit 1
+        fi
+        if [[ -n "$SELECTED_SHA" && "$SELECTED_SHA" != "$GITHUB_SHA" ]]; then
+          echo 'Select the intended workflow ref and leave GIT_SHA empty or use its full matching SHA.' >&2
+          exit 1
+        fi
     - name: Checkout from GIT_SHA
       if: ${{ inputs.GIT_SHA}}
       uses: actions/checkout@v4
@@ -62,14 +80,24 @@ runs:
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v4
     - name: Use ruby version user input if present
-      if: ${{ inputs.RUBY_VERSION }}
+      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' && inputs.RUBY_VERSION != '' }}
       shell: bash
       run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
     - name: Otherwise, check .ruby-version
-      if: ${{ ! inputs.RUBY_VERSION }}
+      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' && inputs.RUBY_VERSION == '' }}
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
+    - name: Prepare CodeBuild Ruby install phase
+      id: ruby-install
+      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' }}
+      shell: bash
+      run: |
+        {
+          echo 'phase<<EOF'
+          printf 'install:\n    runtime-versions:\n      ruby: %s\n' "$RUBY_VERSION"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -77,6 +105,7 @@ runs:
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
     - name: Setup SAM
+      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' }}
       uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
@@ -96,9 +125,14 @@ runs:
       uses: aws-actions/aws-codebuild-run-build@v1
       env:
         CI: "true"
+        DOCKER_USER: ${{ inputs.DOCKER_USER }}
+        DOCKER_PASS: ${{ inputs.DOCKER_PASS }}
+        GIT_SHA: ${{ github.sha }}
+        AWS_REGION: ${{ inputs.AWS_REGION }}
       with:
-        env-vars-for-codebuild: ${{ inputs.BUNDLE_CACHE_SCOPE != '' && 'CI' || '' }}
+        env-vars-for-codebuild: ${{ inputs.PREINSTALLED_RUBY_IMAGE != '' && 'DOCKER_USER,DOCKER_PASS,CI,GIT_SHA,AWS_REGION' || inputs.BUNDLE_CACHE_SCOPE != '' && 'DOCKER_USER,DOCKER_PASS,CI' || 'DOCKER_USER,DOCKER_PASS' }}
         project-name: ${{ inputs.PROJECT_NAME }}
+        image-override: ${{ inputs.PREINSTALLED_RUBY_IMAGE }}
         disable-source-override: false
         source-version-override: ${{ github.sha }}
         buildspec-override: |
@@ -108,25 +142,40 @@ runs:
             paths:
               - 'rails_api/vendor/bundle/**/*'
           phases:
-            install:
-              runtime-versions:
-                ruby: ${{ env.RUBY_VERSION }}
+            ${{ steps.ruby-install.outputs.phase }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
+                - |
+                  if ${{ inputs.PREINSTALLED_RUBY_IMAGE != '' }}; then
+                    RBENV_VERSION="$(cat rails_api/.ruby-version)" || exit 1
+                    export RBENV_VERSION
+                    if ! actual_ruby="$(ruby -e 'print RUBY_VERSION')"; then
+                      printf 'Ruby %s is unavailable in the CodeBuild image.\n' "$RBENV_VERSION" >&2
+                      exit 1
+                    fi
+                    if [ "$actual_ruby" != "$RBENV_VERSION" ]; then
+                      printf 'Expected Ruby %s, got %s.\n' "$RBENV_VERSION" "$actual_ruby" >&2
+                      exit 1
+                    fi
+                  fi
                 - ruby -v
                 - echo "== DOCKER LOGIN =="
-                - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
+                - set +x
+                - printf '%s' "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                 - echo "== DEPLOY =="
                 - cd rails_api
                 - |
                   BUNDLER_VERSION="${{ inputs.BUNDLER_VERSION }}"
-                  if [ -z "$BUNDLER_VERSION" ]; then
-                    BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                  # With preinstalled Ruby, Bundler can select the lockfile version itself.
+                  if ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' }} || [ -n "$BUNDLER_VERSION" ]; then
+                    if [ -z "$BUNDLER_VERSION" ]; then
+                      BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                    fi
+                    test -n "$BUNDLER_VERSION"
+                    gem install bundler --version "$BUNDLER_VERSION" --no-document
+                    bundle --version
                   fi
-                  test -n "$BUNDLER_VERSION"
-                  gem install bundler --version "$BUNDLER_VERSION" --no-document
-                  bundle --version
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure
@@ -134,9 +183,8 @@ runs:
       id: check-deploy-failure
       shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
-    - name: Setup node
-      uses: actions/setup-node@v3
     - name: Post to a Slack channel
+      if: ${{ always() && (inputs.PREINSTALLED_RUBY_IMAGE != '' || success()) }}
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
       with:
