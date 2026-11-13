@@ -183,9 +183,6 @@ runs:
       id: check-deploy-failure
       shell: bash
       run: echo '::set-output name=DEPLOY_FAILED::true'
-    - name: Setup node
-      if: ${{ inputs.PREINSTALLED_RUBY_IMAGE == '' }}
-      uses: actions/setup-node@v3
     - name: Post to a Slack channel
       if: ${{ always() && (inputs.PREINSTALLED_RUBY_IMAGE != '' || success()) }}
       id: slack
