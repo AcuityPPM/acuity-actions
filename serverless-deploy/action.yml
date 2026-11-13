@@ -38,6 +38,17 @@ inputs:
     description: Run Hasura migration
     required: false
     default: "false"
+  RUBY_VERSION:
+    description: the version of ruby to use (optional, in place of .ruby-version file)
+    required: false
+  BUNDLER_VERSION:
+    description: Bundler version to install (defaults to Gemfile.lock)
+    required: false
+
+  BUNDLE_CACHE_SCOPE:
+    description: Optional cache key prefix for the Ruby, architecture and CodeBuild image. Enables CI cleanup.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -50,6 +61,15 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v4
+    - name: Use ruby version user input if present
+      if: ${{ inputs.RUBY_VERSION }}
+      shell: bash
+      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .ruby-version
+      if: ${{ ! inputs.RUBY_VERSION }}
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -60,21 +80,37 @@ runs:
       uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
+    - name: Prepare bundle cache key
+      id: bundle-cache
+      if: ${{ inputs.BUNDLE_CACHE_SCOPE != '' }}
+      shell: bash
+      env:
+        BUNDLE_CACHE_SCOPE: ${{ inputs.BUNDLE_CACHE_SCOPE }}
+      run: |
+        if [[ ! "$BUNDLE_CACHE_SCOPE" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+          echo "BUNDLE_CACHE_SCOPE must contain only letters, digits, underscores and hyphens." >&2
+          exit 1
+        fi
+        printf 'key_line=key: %s-$(codebuild-hash-files rails_api/.ruby-version rails_api/Gemfile.lock)\n' "$BUNDLE_CACHE_SCOPE" >> "$GITHUB_OUTPUT"
     - name: Run CodeBuild
       uses: aws-actions/aws-codebuild-run-build@v1
+      env:
+        CI: "true"
       with:
+        env-vars-for-codebuild: ${{ inputs.BUNDLE_CACHE_SCOPE != '' && 'CI' || '' }}
         project-name: ${{ inputs.PROJECT_NAME }}
         disable-source-override: false
         source-version-override: ${{ github.sha }}
         buildspec-override: |
           version: 0.2
           cache:
+            ${{ steps.bundle-cache.outputs.key_line }}
             paths:
               - 'rails_api/vendor/bundle/**/*'
           phases:
             install:
               runtime-versions:
-                ruby: 3.2.2
+                ruby: ${{ env.RUBY_VERSION }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
@@ -83,6 +119,14 @@ runs:
                 - docker login -u ${{ inputs.DOCKER_USER }} -p ${{ inputs.DOCKER_PASS }}
                 - echo "== DEPLOY =="
                 - cd rails_api
+                - |
+                  BUNDLER_VERSION="${{ inputs.BUNDLER_VERSION }}"
+                  if [ -z "$BUNDLER_VERSION" ]; then
+                    BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                  fi
+                  test -n "$BUNDLER_VERSION"
+                  gem install bundler --version "$BUNDLER_VERSION" --no-document
+                  bundle --version
                 - RAILS_ENV=${{ inputs.ENVIRONMENT}} bin/deploy
 
     - name: Check Deploy Failure

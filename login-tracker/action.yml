@@ -25,6 +25,12 @@ inputs:
   GIT_SHA:
     description: the git sha you want to deploy
     required: false
+  RUBY_VERSION:
+    description: the version of ruby to use (optional, in place of .ruby-version file)
+    required: false
+  BUNDLER_VERSION:
+    description: Bundler version to install (defaults to Gemfile.lock)
+    required: false
 
 runs:
   using: composite
@@ -37,6 +43,15 @@ runs:
     - name: Otherwise, Checkout from HEAD
       if: ${{ ! inputs.GIT_SHA }}
       uses: actions/checkout@v4
+    - name: Use ruby version user input if present
+      if: ${{ inputs.RUBY_VERSION }}
+      shell: bash
+      run: echo "RUBY_VERSION=${{ inputs.RUBY_VERSION }}" >> $GITHUB_ENV
+    - name: Otherwise, check .ruby-version
+      if: ${{ ! inputs.RUBY_VERSION }}
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIR }}
+      run: echo "RUBY_VERSION=`cat .ruby-version`" >> $GITHUB_ENV
     - name: Configure AWS credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are pulled from secrets
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -58,7 +73,7 @@ runs:
           phases:
             install:
               runtime-versions:
-                ruby: 3.2.2
+                ruby: ${{ env.RUBY_VERSION }}
             build:
               commands:
                 - echo "== INIT RUBY VERSION =="
@@ -66,6 +81,14 @@ runs:
                 - echo "== RUN JOB =="
                 - echo '== Bundle For Deployment =='
                 - cd rails_api
+                - |
+                  BUNDLER_VERSION="${{ inputs.BUNDLER_VERSION }}"
+                  if [ -z "$BUNDLER_VERSION" ]; then
+                    BUNDLER_VERSION="$(awk '/BUNDLED WITH/{getline; gsub(/^[[:space:]]+/, ""); print; exit}' Gemfile.lock)"
+                  fi
+                  test -n "$BUNDLER_VERSION"
+                  gem install bundler --version "$BUNDLER_VERSION" --no-document
+                  bundle --version
                 - bundle config --global silence_root_warning true
                 - bundle config --local deployment true
                 - bundle config --local path './vendor/bundle'

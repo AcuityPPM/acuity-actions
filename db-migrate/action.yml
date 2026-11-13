@@ -42,6 +42,7 @@ runs:
       with:
         bundler-cache: true
         ruby-version: ${{ env.RUBY_VERSION }}
+        working-directory: ${{ inputs.WORKING_DIR }}
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -59,20 +60,15 @@ runs:
           --cidr ${MY_IP}/32 \
           --region ${{ inputs.AWS_REGION }} || true
 
-    - name: Install dependencies
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIR }}
-      run: MAKE="make --jobs 8" bundle install --path vendor/bundle
     - name: Migrate DB
       shell: bash
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        gem install rake -v 13.0.6
         aws s3 cp s3://acutity-env/backend/${{ inputs.ENVIRONMENT}} ./.env
         set -o allexport
         source .env
         set +o allexport
-        rake db:migrate
+        bundle exec rake db:migrate
     - name: Check Deploy Failure
       if: ${{ failure() }}
       id: check-deploy-failure
