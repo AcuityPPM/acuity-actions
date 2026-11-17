@@ -42,8 +42,6 @@ runs:
         aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ inputs.AWS_REGION }}
-    - name: Setup node
-      uses: actions/setup-node@v3
     - name: Cache Hasura CLI
       id: cache-hasura-cli
       uses: actions/cache@v4
